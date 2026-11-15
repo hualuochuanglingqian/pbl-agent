@@ -1,0 +1,19 @@
+# 密钥与本地配置 —— 绝不入库
+.env
+
+# 个人数据（真实病例、作业成品、历史快照）
+cases/
+output/
+自编教材/
+pptm_projects/
+
+# 教材知识库（版权教材 PDF/索引/文献图片，请自行构建）
+knowledge_base/
+
+# 运行产物
+logs/
+__pycache__/
+*.pyc
+*.zip
+.Python
+streamlit.log

@@ -1,0 +1,346 @@
+{
+ "中医学（第10版）": {
+  "title": "中医学",
+  "authors": "徐巍, 范恒",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "临床流行病学与循证医学（第6版）": {
+  "title": "临床流行病学与循证医学",
+  "authors": "刘续宝, 王小钦",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "6版"
+ },
+ "临床药理学（第8版）": {
+  "title": "临床药理学",
+  "authors": "李俊",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "临床营养学": {
+  "title": "临床营养学",
+  "authors": "石汉平, 陈伟",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": ""
+ },
+ "传染病学（第10版）": {
+  "title": "传染病学",
+  "authors": "李兰娟",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "体育（第7版）": {
+  "title": "体育",
+  "authors": "程鹏",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "7版"
+ },
+ "儿科（第10版）": {
+  "title": "儿科",
+  "authors": "黄国英, 孙锟, 罗小平",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "全科医学概论（第6版）": {
+  "title": "全科医学概论",
+  "authors": "于晓松, 路孝琴",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "6版"
+ },
+ "内科（第10版）": {
+  "title": "内科学",
+  "authors": "葛均波, 王辰, 王建安",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "医学免疫学（第8版）": {
+  "title": "医学免疫学",
+  "authors": "曹雪涛",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "医学导论（第6版）": {
+  "title": "医学导论",
+  "authors": "马建辉, 闻德亮",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "6版"
+ },
+ "医学影像学（第9版）": {
+  "title": "医学影像学",
+  "authors": "龚启勇, 刘士远",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2018",
+  "edition": "9版"
+ },
+ "医学微生物学（第10版）": {
+  "title": "医学微生物学",
+  "authors": "郭晓奎, 彭宜红",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "医学心理学（第8版）": {
+  "title": "医学心理学",
+  "authors": "杨艳杰, 朱熊兆",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "医学生物学（第10版）": {
+  "title": "医学生物学",
+  "authors": "傅松滨",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "医学细胞生物学（第7版）": {
+  "title": "医学细胞生物学",
+  "authors": "陈誉华, 朱海英",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "7版"
+ },
+ "医学统计学（第8版）": {
+  "title": "医学统计学",
+  "authors": "李康, 贺佳",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "医学计算机应用（第7版）": {
+  "title": "医学计算机应用",
+  "authors": "袁同山, 肖峰",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "7版"
+ },
+ "医学遗传学（第8版）": {
+  "title": "医学遗传学",
+  "authors": "左伋, 张学",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "医患沟通（第3版）": {
+  "title": "医患沟通",
+  "authors": "尹梅, 唐宏宇",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "3版"
+ },
+ "卫生法（第6版）": {
+  "title": "卫生法",
+  "authors": "汪建荣, 田侃",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "6版"
+ },
+ "口腔科学（第10版）": {
+  "title": "口腔科学",
+  "authors": "郭传瑸, 程斌",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "外科（第10版）": {
+  "title": "外科",
+  "authors": "陈孝平, 张英泽, 兰平",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "妇产科（第10版）": {
+  "title": "妇产科",
+  "authors": "孔北华, 马丁, 段涛",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "寄生虫（第10版）": {
+  "title": "寄生虫",
+  "authors": "苏川, 刘文琪",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "局解（第10版）": {
+  "title": "局解",
+  "authors": "钱亦华, 张卫光",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "康复医学（第7版）": {
+  "title": "康复医学",
+  "authors": "黄晓琳, 王宁华",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "7版"
+ },
+ "急诊与灾难医学（第4版）": {
+  "title": "急诊与灾难医学",
+  "authors": "张进祥, 崇巍",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "4版"
+ },
+ "核医学（第10版）": {
+  "title": "核医学",
+  "authors": "田梅, 石洪成",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "法医学（第8版）": {
+  "title": "法医学",
+  "authors": "丛斌, 张林",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "生化（第10版）": {
+  "title": "生化",
+  "authors": "高国全, 汤其群",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "病理（第10版）": {
+  "title": "病理",
+  "authors": "卞修武, 李一雷",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "病生（第10版）": {
+  "title": "病生",
+  "authors": "陈国强, 钱睿哲",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "皮肤性病学（第10版）": {
+  "title": "皮肤性病学",
+  "authors": "崔勇, 高兴华",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "眼科学（第10版）": {
+  "title": "眼科学",
+  "authors": "范先群, 颜华",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "神经病学（第9版）": {
+  "title": "神经病学",
+  "authors": "郝峻巍, 罗本燕",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2018",
+  "edition": "9版"
+ },
+ "精神病学（第9版）": {
+  "title": "精神病学",
+  "authors": "陆林, 李涛",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2018",
+  "edition": "9版"
+ },
+ "系解（第10版）": {
+  "title": "系解",
+  "authors": "崔慧先, 刘学政",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "组胚（第10版）": {
+  "title": "组胚",
+  "authors": "李继承, 邵淑娟",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "耳鼻咽喉头颈外科学（第10版）": {
+  "title": "耳鼻咽喉头颈外科学",
+  "authors": "张欣, 张罗",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "药理（第10版）": {
+  "title": "药理",
+  "authors": "杨宝峰, 陈建国",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2024",
+  "edition": "10版"
+ },
+ "预防医学（第8版）": {
+  "title": "预防医学",
+  "authors": "胡志斌, 黄国伟",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "2013",
+  "edition": "8版"
+ },
+ "麻醉（第5版）": {
+  "title": "麻醉",
+  "authors": "李文志, 邓小明",
+  "place": "北京",
+  "publisher": "人民卫生出版社",
+  "year": "",
+  "edition": "5版"
+ }
+}
