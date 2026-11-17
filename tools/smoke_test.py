@@ -557,4 +557,69 @@ assert _heal_case.questions[0].learning[0].body == "甲[1]。乙[2]。"
 assert _heal_case.questions[0].clinical == "临床[3]。"
 print("23. 相邻重复引用标注折叠 OK")
 
+# ---- 临床应用衔接前幕：前幕存档自动进入提示词
+from pbl import acts as _acts
+_prev = _Case(title="衔接测试病例", series="_smoke_series2", act_no=1, act_note="首发症状与初步检查",
+              case_text="患者因咳嗽咳痰入院。",
+              questions=[_Question(qid="Q1", text="初步诊断", clinical="第一幕临床：考虑慢性支气管炎急性发作。")])
+_acts.save_act(_prev)
+_cur = _Case(title="衔接测试病例", series="_smoke_series2", act_no=2, act_note="肺功能回报",
+             word_prev_acts=[1],
+             questions=[_Question(qid="Q1", text="肺功能解读",
+                                  learning=[_LB(heading="阻塞", body="FEV1/FVC<0.7 提示持续气流受限。")])])
+_pc = _pl._prev_act_context(_cur)
+assert "第一幕" in _pc and "第一幕临床：考虑慢性支气管炎急性发作" in _pc and "首发症状" in _pc, _pc[:200]
+_cap = {}
+_orig_cj3 = _pl.llm.chat_json
+_pl.llm.chat_json = lambda prompt, schema, **kw: (
+    _cap.update({"prompt": prompt}) or type("R", (), {"clinical": "延续第一幕的急性发作，本幕肺功能提示持续气流受限，应启动支气管舒张剂治疗。"})())
+try:
+    ok3, msg3 = _pl.generate_clinical(_cur, _cur.questions[0])
+finally:
+    _pl.llm.chat_json = _orig_cj3
+assert ok3, msg3
+assert "前一幕回顾" in _cap["prompt"] and "3b" in _cap["prompt"] and "延续第一幕" in _cap["prompt"]
+assert "不得整段复述前一幕" in _cap["prompt"]
+assert "急性发作" in _cur.questions[0].clinical
+# 无前幕时的占位
+_no_prev = _Case(title="衔接测试病例", series="_smoke_series2", act_no=3,
+                 questions=[_Question(qid="Q1", text="x",
+                                      learning=[_LB(heading="h", body="b")])])
+assert _pl._prev_act_context(_no_prev) == ""
+print("24. 临床应用衔接前幕存档 OK")
+
+# ---- 学习内容衔接前幕：三路径提示词注入前幕已学清单（GEN 路径端到端验证）
+assert "{prev_block}" in _pl.GEN_PROMPT and "{prev_block}" in _pl.DIRECT_PROMPT \
+    and "{prev_block}" in _pl.REGEN_PROMPT, "三个生成提示词都应带前幕占位符"
+assert all("承接前幕知识" in p for p in (_pl.GEN_PROMPT, _pl.DIRECT_PROMPT, _pl.REGEN_PROMPT))
+_act1 = _Case(title="衔接测试病例", series="_smoke_series2", act_no=1, act_note="首发症状与初步检查",
+              case_text="患者因咳嗽咳痰入院。",
+              questions=[_Question(qid="Q1", text="初步诊断",
+                                   learning=[_LB(heading="病因与诱因", body="吸烟为主要病因。")])])
+_acts.save_act(_act1)
+_gen_case = _Case(title="衔接测试病例", series="_smoke_series2", act_no=2, word_prev_acts=[1],
+                  questions=[_Question(qid="Q1", text="发病机制",
+                                       learning=[_LB(heading="阻塞", body="FEV1/FVC<0.7。")],
+                                       en_keywords="COPD mechanism")])
+_lpc = _pl._prev_act_context(_gen_case, kind="learning")
+assert "已学小节" in _lpc and "病因与诱因" in _lpc, _lpc[:200]
+_capg = {}
+_orig_cj4 = _pl.llm.chat_json
+_orig_sp4 = _pl.pubmed.search_pubmed
+_pl.llm.chat_json = lambda prompt, schema, **kw: (
+    _capg.update({"prompt": prompt}) or _pl._GenOut(
+        learning=[{"heading": "分子机制", "body": "中性粒细胞弹性蛋白酶破坏肺泡弹性纤维[1]。",
+                   "source": "", "table": []}], ref_indexes=[], ref_notes=[]))
+_pl.pubmed.search_pubmed = lambda *a, **k: []
+try:
+    ok4, _m4 = _pl.generate_question(_gen_case, _gen_case.questions[0])
+finally:
+    _pl.llm.chat_json = _orig_cj4
+    _pl.pubmed.search_pubmed = _orig_sp4
+assert ok4, _m4
+assert "前一幕已学内容" in _capg["prompt"] and "病因与诱因" in _capg["prompt"], _capg["prompt"][:300]
+assert "承接前幕知识" in _capg["prompt"]
+assert "中性粒细胞弹性蛋白酶" in _gen_case.questions[0].learning[0].body
+print("25. 学习内容衔接前幕（GEN 端到端 + 三路径占位符）OK")
+
 print("\n全部冒烟测试通过 ✅")

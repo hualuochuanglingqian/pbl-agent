@@ -61,6 +61,9 @@ def _classify(e: Exception, provider: str | None = None,
     if status == 402 or "insufficient balance" in low:
         return (f"API 账户余额不足（{prov} 402），请充值或在 .env 改用其他供应商"
                 "（如 PBL_PROVIDER=zhipu、PBL_MODEL=glm-4-flash）"), False
+    if "insufficient credit" in low or ("credit" in low and "purchase" in low):
+        return ("中转站账户积分已用完（insufficient credits）：请到中转站后台充值；"
+                "或在②区顶部把内容生成模型切换为「智谱 GLM-4.6」（当前智谱 Key 可用）"), False
     if status == 401:
         return "API Key 无效或已过期（401），请检查 .env 中的 Key", False
     if status == 403:
@@ -69,6 +72,9 @@ def _classify(e: Exception, provider: str | None = None,
         return f"模型或接口不存在（404）：{mdl}", False
     if status == 429:
         return "请求过于频繁或额度用尽（429），请稍后重试", True
+    if status == 503 or "overloaded" in low or "temporarily unavailable" in low:
+        return ("中转站上游模型暂时过载（503）：请等 1~2 分钟重试，"
+                "或在②区顶部换一个内容生成模型（如 DeepSeek V4.1 Flash / 智谱 GLM-4.6）"), True
     if type(e).__name__ in ("APIConnectionError", "ConnectError", "ReadTimeout",
                             "ConnectTimeout", "RemoteProtocolError"):
         hint = ""
@@ -278,7 +284,7 @@ def chat(prompt: str, system: str | None = None, temperature: float | None = Non
             if attempt == 0 and retryable:
                 _drop_client(prov, mdl) if overridden else _reset_client()
                 cli = _client_for(prov, mdl) if overridden else client()
-                time.sleep(1.5)
+                time.sleep(2 if attempt == 0 else 8)
                 net.ensure_network()
                 continue
             break
@@ -319,7 +325,7 @@ def chat_json(prompt: str, schema_model, retries: int = 2, system: str | None = 
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": full})
     error_note = ""
-    for _ in range(retries + 1):
+    for _attempt_i in range(retries + 1):
         cli = _client_for(prov, mdl) if overridden else client()
         if cli is None:
             _LAST_ERROR = "未配置 API Key"
@@ -337,7 +343,7 @@ def chat_json(prompt: str, schema_model, retries: int = 2, system: str | None = 
             if not retryable:
                 return None
             _drop_client(prov, mdl) if overridden else _reset_client()
-            time.sleep(1.5)
+            time.sleep(2 if _attempt_i == 0 else 10)
             net.ensure_network()
             continue
         if not (content or "").strip():

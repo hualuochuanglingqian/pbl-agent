@@ -819,7 +819,10 @@ _QUALITY_BAR = """
 3. 深度与去重：每节 body 至少 5 条分层要点（首行总起 +（1）（2）…，要点 1~2 句）；
    两个小节若内容会互相重叠必须合并——三个浅薄重复的小节不如两个扎实的小节；
    材料不足以支撑某小节时直接砍掉，不硬凑节数；
-4. 表格优先：分级/对比/鉴别/方案类内容（如 GOLD 分级、药物对比）一律用 table 呈现；
+4. 表格优先但**表格与正文分工**：分级/对比/鉴别/方案类内容（如 GOLD 分级、药物对比）
+   用 table 呈现；**正文里禁止把表格中的行再逐条复述一遍**——表格写什么，正文就不重复什么，
+   正文只写表格放不下的引入、机制解释与注意事项（每项一两句即可）；
+   无表格的纯文字小节不受影响；
 5. 引用诚实：标注只给该句内容真正对应的资料，同一 [Tn] 不得覆盖整节每一句；
    source 只在该节主体确实来自对应 [Tn] 时填写，不得整题共用同一页码，不得编造页码。"""
 
@@ -829,6 +832,9 @@ GEN_PROMPT = """你是一名医学教育专家，正在为 PBL 教案的下面�
 {case_text}
 
 【问题】{q_text}（类型：{q_type}）
+
+【前一幕已学内容】（前几幕已生成的知识点清单；为空表示无前幕存档）
+{prev_block}
 
 【教材检索结果】（编号 T1..Tn，含出处；为空表示未检索教材）
 {tb}
@@ -851,6 +857,9 @@ GEN_PROMPT = """你是一名医学教育专家，正在为 PBL 教案的下面�
 0. **范围红线**：每个小节必须直接回答【问题】本身。题目问机制就只写机制，
    问诊断就只写诊断；**禁止**顺带写临床表现、诊断标准、治疗原则等与本题无关的内容。
    教材检索结果中与本题无关的段落一律不纳入。
+0b. **承接前幕知识（如提供前幕已学清单）**：学习内容要承接推进，不与前面幕次重复——
+   前幕已充分展开的知识点本幕不再重复展开（至多一句概述衔接），把篇幅让给本题
+   在本幕语境下尚需掌握的新知识与更深细节；**保持通用知识风格**（不出现病例表述）。
 1. 学习内容为**通用医学知识**，不要联系本病例、不要出现"该患者/本例"等病例表述
    ——病例分析在"实际应用"部分单独生成；
 2. 内容务必**精简、不重复**：各小节之间、同一小节内不得重复同一知识点或近似表述，
@@ -1280,6 +1289,7 @@ def generate_question(case: Case, q: Question, use_textbook: bool = True,
 
     prompt = GEN_PROMPT.format(
         case_text=_clip_case(case), q_text=q.text, q_type=q.qtype,
+        prev_block=_prev_act_context(case, kind="learning") or "（无前幕存档）",
         tb=_fmt_tb_hits(tb_hits), pm=_fmt_pm_hits(pm_refs), rm=_fmt_rm_hits(manual),
         human_style=_HUMAN_STYLE,
     )
@@ -1385,6 +1395,9 @@ REGEN_PROMPT = """你是一名医学教育专家。请按用户要求重写 PBL 
 
 【问题】{q_text}（类型：{q_type}）
 
+【前一幕已学内容】（前几幕已生成的知识点清单；为空表示无前幕存档）
+{prev_block}
+
 【当前学习内容】
 {learning}
 
@@ -1405,7 +1418,9 @@ REGEN_PROMPT = """你是一名医学教育专家。请按用户要求重写 PBL 
 内容要求：学习内容为通用医学知识，不要联系本病例、不要出现"该患者/本例"等病例表述
 （对病例的具体分析在"实际应用"部分单独生成）；
 **范围红线**：每个小节必须直接回答【问题】本身，禁止顺带写临床表现、诊断标准、治疗原则等与本题无关的内容；
-各小节之间、同一小节内不得重复同一知识点或近似表述，内容务必精简。
+各小节之间、同一小节内不得重复同一知识点或近似表述，内容务必精简；
+**承接前幕知识（如提供前幕已学清单）**：前幕已充分展开的知识点本幕不再重复展开
+（至多一句概述衔接），把篇幅让给本题在本幕语境下尚需掌握的新知识与更深细节。
 """ + _QUALITY_BAR + """
 
 {human_style}
@@ -1425,14 +1440,17 @@ def _doc_type_from_instruction(instruction: str, default: str = "all") -> str:
     return default if default in ("all", "research", "review") else "all"
 
 
-def regenerate_field(case: Case, qid: str, field: str, instruction: str) -> bool:
-    """只重生成学习内容（临床应用请用 generate_clinical）。instruction 为空则按原内容优化。"""
+def regenerate_field(case: Case, qid: str, field: str, instruction: str) -> tuple[bool, str]:
+    """只重生成学习内容（临床应用请用 generate_clinical）。instruction 为空则按原内容优化。
+
+    返回 (是否成功, 失败/提示原因)——供界面直接显示真实原因，而不是笼统报错。
+    """
     q = case.question(qid)
     if q is None or field not in FIELD_PROMPTS:
-        return False
+        return False, "问题不存在或字段不支持重新生成"
     if not llm.has_key():
         _demo_generate(q, case.case_text)
-        return True
+        return True, "（演示模式）已填入演示内容，配置 API Key 后可生成正式内容。"
     tb_hits = _tb_query(q)
     original_refs = [r.model_copy(deep=True) for r in q.references]
     old_books = [r.model_copy(deep=True) for r in q.references if r.ref_type == "M"]
@@ -1465,6 +1483,7 @@ def regenerate_field(case: Case, qid: str, field: str, instruction: str) -> bool
                            for i, r in enumerate(merged, 1)) or "（无）"
     prompt = REGEN_PROMPT.format(
         case_text=_clip_case(case), q_text=q.text, q_type=q.qtype,
+        prev_block=_prev_act_context(case, kind="learning") or "（无前幕存档）",
         learning="\n".join(f"【{b.heading}】{b.body}" for b in q.learning) or "（空）",
         tb=_fmt_tb_hits(tb_hits), current_refs=cur_fmt, human_style=_HUMAN_STYLE,
         task=FIELD_PROMPTS[field],
@@ -1472,7 +1491,8 @@ def regenerate_field(case: Case, qid: str, field: str, instruction: str) -> bool
     )
     result = llm.chat_json(prompt, _GenOut)
     if result is None:
-        return False
+        return False, ("模型调用未返回有效内容：" + (llm.last_error() or "未知原因")
+                       + "。可稍等重试，或在②区顶部换一个内容生成模型（如 V4.1 Flash / 智谱 GLM-4.6）。")
     if result.learning:
         old_by_heading = {_question_match_key(b.heading): b for b in q.learning}
         new_learning = []
@@ -1507,7 +1527,7 @@ def regenerate_field(case: Case, qid: str, field: str, instruction: str) -> bool
     _trimmed = enforce_max_refs(q)
     if _trimmed:
         _log(f"regenerate_field {q.qid} 参考文献超出上限 {MAX_REFS}，已截断 {_trimmed} 条并重排标号")
-    return True
+    return True, f"已按指令重新生成{field}并解析引用。"
 
 
 def refresh_references(case: Case, q: Question, limit: int = 3) -> tuple[int, str]:
@@ -1649,6 +1669,9 @@ DIRECT_PROMPT = """你是医学教育专家。请直接回答这个 PBL 问题�
 
 【问题】{q_text}（类型：{q_type}）
 
+【前一幕已学内容】（前几幕已生成的知识点清单；为空表示无前幕存档）
+{prev_block}
+
 请生成学习内容 learning：2~4 个小节，每节含：
 - heading：小标题（如"补液扩容治疗概述"）；
 - body：正文，采用分层编号的条理化结构——子要点用"（1）（2）"，再下级用"①②"，
@@ -1660,7 +1683,9 @@ DIRECT_PROMPT = """你是医学教育专家。请直接回答这个 PBL 问题�
 内容要求：学习内容为通用医学知识，不要联系本病例、不要出现"该患者/本例"等病例表述
 （对病例的具体分析在"实际应用"部分单独生成）；
 **范围红线**：每个小节必须直接回答【问题】本身，禁止顺带写临床表现、诊断标准、治疗原则等与本题无关的内容；
-各小节之间、同一小节内不得重复同一知识点或近似表述，内容务必精简。
+各小节之间、同一小节内不得重复同一知识点或近似表述，内容务必精简；
+**承接前幕知识（如提供前幕已学清单）**：前幕已充分展开的知识点本幕不再重复展开
+（至多一句概述衔接），把篇幅让给本题在本幕语境下尚需掌握的新知识与更深细节。
 """ + _QUALITY_BAR + """
 
 {human_style}
@@ -1697,6 +1722,7 @@ def generate_question_direct(case: Case, q: Question, use_pubmed: bool = True) -
     tb_hits = _tb_query(q)
     result = llm.chat_json(DIRECT_PROMPT.format(
         case_text=_clip_case(case), q_text=q.text, q_type=q.qtype,
+        prev_block=_prev_act_context(case, kind="learning") or "（无前幕存档）",
         human_style=_HUMAN_STYLE), _DirectOut)
     if result is None:
         _log(f"generate_question_direct {q.qid} 失败：" + (llm.last_error() or "模型未返回有效内容"))
@@ -1768,6 +1794,7 @@ REVIEW_PROMPT = """你是严格的医学教案审校官。请审核并修订下�
    **尽量保留原有引用**：原句保留的，其引用编号一并保留，只有整句被删除时才可去掉对应引用；
    **没有任何标注的文献将不会保留在文献表里**。
 8. 表达规范（审定后通读一遍）：删除空泛评价句（"具有重要的临床意义""提供了新的思路"）、万能开头结尾（"随着…的不断发展"）、名词化堆叠；**改写无信息量表述**——"某些 X""与 Y 相关""不容忽视""可能起重要作用"必须改写成具体对象（基因/分子/数值/药名），改不出来就整句删除；同义术语全文统一；"首先/其次/最后/综上所述"等路标词过量时精简；不改变任何数值与引用标注。
+9. **表格与正文去重**：正文段落里与表格内容重复的行（同一分级/对比/方案逐条出现两遍）——删正文的、留表格；正文只保留表格放不下的补充说明；表格本身除非有错否则不动。
 在 notes 里逐条说明改了什么（100 字内）；无修改则写"无修改"。
 
 格式禁则：禁止使用【】括号；编号只用（1）（2）与①②两级，
@@ -2261,12 +2288,22 @@ CLINICAL_PROMPT = """你是临床医学教育专家。请基于病例、问题�
 【学习内容】
 {learning}
 
+【前一幕回顾】
+{prev_block}
+
 要求：
 1. 篇幅：250 字左右，**最多不得超过 500 字**；
 2. 只写"把知识用到本例上"的内容：结合病例的具体症状、体征、检验数值、用药，
    给出针对该患者的判断、取舍与处置建议；
 3. **不得重复学习内容**：学习内容是通用知识，这里不要复述概念、标准、原理，
    直接写本例的分析与决策；段落之间、句子之间也不得重复；
+3b. **衔接前幕（如提供了前幕回顾）**：临床应用要体现病例的时间线与病情演进——
+   开头一句承接前情时**必须落到前幕的具体诊断结论、关键数值或已给治疗**
+   （如「延续第一幕：患者因慢性支气管炎急性加重入院，抗感染治疗后症状缓解」），
+   **禁止**只写「延续第一幕入院」「结合前一幕」这类无信息量的空泛承接；
+   随后重点分析**本幕新增信息**（新检查回报、新症状、治疗调整）带来的判断与决策变化，
+   并可对比前幕数据的演变（如指标好转/恶化）；**不得整段复述前一幕已写过的分析**；
+   前幕内容与本问题无关时忽略回顾，按原要求撰写；
 {human_style}
 
 4. 不需要标注参考文献出处，正文中不要出现 [数字] 引用标记；
@@ -2275,9 +2312,52 @@ CLINICAL_PROMPT = """你是临床医学教育专家。请基于病例、问题�
 只输出 JSON：{{"clinical":""}}"""
 
 
+def _prev_act_context(case: Case, budget: int = 3200, kind: str = "clinical") -> str:
+    """前幕存档回顾块。
+
+    kind="clinical"：供临床应用衔接前情——各题取临床应用摘要；
+    kind="learning"：供学习内容承接推进——各题取已学小节标题（知识点清单）。
+    每一幕另含：幕名 + 本幕新增摘要 + 病例摘要（截断）。
+
+    幕来源：优先用①区勾选的前幕（word_prev_acts）；未勾选时自动回退到
+    紧邻的上一幕（act_no-1 存档存在即用）——「结合前一幕」不应依赖记得勾选。
+    完全没有前幕时返回空串——提示词里按「无前幕存档」处理。
+    """
+    try:
+        from . import acts as _acts
+        prevs = _acts.prev_cases(case)
+        if not prevs and case.act_no and case.act_no > 1:
+            p = _acts.act_path(case, case.act_no - 1)
+            c = _acts.load_act(p) if p.exists() else None
+            prevs = [c] if c is not None else []
+    except Exception:
+        return ""
+    if not prevs:
+        return ""
+    parts: list[str] = []
+    for pc in prevs:
+        seg = [f"【{_acts.act_label(pc)}】"]
+        if getattr(pc, "act_note", "").strip():
+            seg.append("本幕新增：" + pc.act_note.strip()[:160])
+        if pc.case_text:
+            seg.append("病例摘要：" + " ".join(pc.case_text.split())[:400])
+        for pq in pc.questions:
+            if kind == "clinical":
+                if pq.clinical.strip():
+                    seg.append(f"· {pq.text[:36]}：{pq.clinical.strip()[:220]}")
+            else:
+                heads = "、".join(b.heading.strip() for b in pq.learning if b.heading.strip())
+                if heads:
+                    seg.append(f"· {pq.text[:36]}：已学小节 {heads[:180]}")
+        parts.append("\n".join(seg))
+    return "\n\n".join(parts)[:budget]
+
+
 def generate_clinical(case: Case, q: Question, instruction: str = "") -> tuple[bool, str]:
     """临床应用单独生成：输入病例+问题+学习内容，模型撰写两者的联系。不标注文献。
 
+    存在已勾选并入的前幕存档时，自动把前一幕的病例摘要与各题临床应用作为
+    【前一幕回顾】纳入提示词，要求衔接病情演进而非复述前幕分析。
     返回 (是否成功, 诊断信息)——失败原因会写入 logs/pbl.log 并返回给界面显示。
     """
     if not q.learning:
@@ -2287,9 +2367,11 @@ def generate_clinical(case: Case, q: Question, instruction: str = "") -> tuple[b
         if not q.clinical:
             q.clinical = f"（演示）结合本病例，围绕「{q.text}」分析其临床表现与处置思路。配置 API Key 后自动生成。"
         return True, "（演示模式）已填入演示文本，配置 API Key 后可生成正式内容。"
+    prev_block = _prev_act_context(case)
     prompt = CLINICAL_PROMPT.format(
         case_text=_clip_case(case), q_text=q.text, q_type=q.qtype,
         learning="\n".join(f"【{b.heading}】{b.body}" for b in q.learning) or "（空）",
+        prev_block=prev_block or "（无前幕存档）",
         extra=f"【用户补充要求】{instruction}\n" if instruction else "",
         human_style=_HUMAN_STYLE,
     )

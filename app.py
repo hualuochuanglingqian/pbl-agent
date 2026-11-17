@@ -553,17 +553,12 @@ with tab2:
     m1, m2 = st.columns([2, 3])
     _mm_pick = m1.selectbox(
         "内容生成模型",
-        ["DeepSeek V4.1 Flash Ultrafast（极速，默认）", "DeepSeek V4.1 Flash（均衡）",
-         "DeepSeek V4 Pro（质量优先，慢）", "智谱 GLM-4.6", "当前默认模型（.env）"],
+        ["DeepSeek V4.1 Flash", "智谱 GLM-4.6", "当前默认模型（.env）"],
         index=0, key=dkey("gen_model"),
-        help="实测同题生成：Ultrafast 约 10~15 秒/题、Flash 约 1 分钟、V4 Pro 约 2~4 分钟"
-             "（其思考 token 不回传但耗时计费）。质量硬门槛提示词对全部模型生效；"
-             "特别难的题可切 V4 Pro。")
+        help="DeepSeek 固定使用 v4.1-flash（约 1 分钟/题，质量与速度均衡）；"
+             "智谱 GLM-4.6 作备用。质量硬门槛提示词对全部模型生效。")
     m2.caption("当前生效：" + llm.active_model_label())
-    _gen_map = {"DeepSeek V4.1 Flash Ultrafast（极速，默认）":
-                    ("deepseek", "deepseek/deepseek-v4.1-flash-ultrafast"),
-                "DeepSeek V4.1 Flash（均衡）": ("deepseek", "deepseek/deepseek-v4.1-flash"),
-                "DeepSeek V4 Pro（质量优先，慢）": ("deepseek", "deepseek/deepseek-v4-pro"),
+    _gen_map = {"DeepSeek V4.1 Flash": ("deepseek", "deepseek/deepseek-v4.1-flash"),
                 "智谱 GLM-4.6": ("zhipu", "glm-4.6"),
                 "当前默认模型（.env）": (None, None)}
     llm.set_active_model(*_gen_map[_mm_pick])
@@ -695,12 +690,14 @@ with tab2:
             inst1 = ci1.text_input("修改指令（可选）", placeholder="如：补充药理机制", key=dkey(f"q_{q.qid}_inst_learning"))
             if ci2.button("♻️ 重新生成学习内容", key=f"q_{q.qid}_reg_learning"):
                 with st.spinner("生成中……"):
-                    ok = pipeline.regenerate_field(c, q.qid, "learning", inst1)
+                    ok, msg = pipeline.regenerate_field(c, q.qid, "learning", inst1)
                 if ok:
+                    if msg:
+                        st.toast(msg, icon="✅")
                     c.touch(); bump_case()
                     st.rerun()
                 else:
-                    st.error("生成失败（检查 API Key / 网络）")
+                    st.error(msg or "生成失败（检查 API Key / 网络）")
 
             # ---- 参考文献
             st.markdown("**📚 参考文献**（PubMed 自动检索 + 手动导入）")
@@ -762,7 +759,8 @@ with tab2:
             # ---- 临床应用
             st.markdown("**🩺 临床应用**")
             st.caption("AI 基于学习内容与病例生成**初稿**，可直接在下方编辑成自己的表述；"
-                       "也可用修改指令让 AI 重写。")
+                       "也可用修改指令让 AI 重写。① 区勾选的前幕存档会自动作为"
+                       "「前一幕回顾」纳入，衔接病情演进、不复述前幕分析。")
             q.clinical = st.text_area("结合病例的分析", value=q.clinical, height=140,
                                       key=dkey(f"q_{q.qid}_clin"))
             cc1, cc2, _ = st.columns([1, 3, 2])
@@ -869,14 +867,10 @@ with tab3:
 
     mm_choice = st.selectbox(
         "导图生成模型",
-        ["DeepSeek V4 Pro（质量优先）", "DeepSeek V4.1 Flash（快）",
-         "DeepSeek V4.1 Flash Ultrafast（极速）", "智谱 GLM-4.6", "当前默认模型（.env）"],
+        ["DeepSeek V4.1 Flash", "智谱 GLM-4.6", "当前默认模型（.env）"],
         index=0, key=dkey("mm_model"),
-        help="总结整合类任务知识密度高，推荐 DeepSeek V4 Pro；赶时间可用 Ultrafast。")
-    _mm_map = {"DeepSeek V4 Pro（质量优先）": ("deepseek", "deepseek/deepseek-v4-pro"),
-               "DeepSeek V4.1 Flash（快）": ("deepseek", "deepseek/deepseek-v4.1-flash"),
-               "DeepSeek V4.1 Flash Ultrafast（极速）":
-                   ("deepseek", "deepseek/deepseek-v4.1-flash-ultrafast"),
+        help="DeepSeek 固定使用 v4.1-flash；智谱 GLM-4.6 作备用。")
+    _mm_map = {"DeepSeek V4.1 Flash": ("deepseek", "deepseek/deepseek-v4.1-flash"),
                "智谱 GLM-4.6": ("zhipu", "glm-4.6"),
                "当前默认模型（.env）": (None, None)}
 
@@ -1519,14 +1513,10 @@ with tab6:
     pb1, pb2 = st.columns([2, 3])
     poster_model = pb1.selectbox(
         "内容生成模型",
-        ["DeepSeek V4 Pro（质量优先）", "DeepSeek V4.1 Flash（快）",
-         "DeepSeek V4.1 Flash Ultrafast（极速）", "智谱 GLM-4.6", "当前默认模型（.env）"],
+        ["DeepSeek V4.1 Flash", "智谱 GLM-4.6", "当前默认模型（.env）"],
         index=0, key=dkey("poster_model"),
-        help="海报内容知识密度高，推荐 DeepSeek V4 Pro；赶时间可用 Ultrafast。")
-    _poster_map = {"DeepSeek V4 Pro（质量优先）": ("deepseek", "deepseek/deepseek-v4-pro"),
-                   "DeepSeek V4.1 Flash（快）": ("deepseek", "deepseek/deepseek-v4.1-flash"),
-                   "DeepSeek V4.1 Flash Ultrafast（极速）":
-                       ("deepseek", "deepseek/deepseek-v4.1-flash-ultrafast"),
+        help="DeepSeek 固定使用 v4.1-flash；智谱 GLM-4.6 作备用。")
+    _poster_map = {"DeepSeek V4.1 Flash": ("deepseek", "deepseek/deepseek-v4.1-flash"),
                    "智谱 GLM-4.6": ("zhipu", "glm-4.6"),
                    "当前默认模型（.env）": (None, None)}
     p_sel = pb2.multiselect("制作哪些问题的海报", qids, default=qids[:1],
